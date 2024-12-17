@@ -1,171 +1,268 @@
-                // <!-- WEATHER INPUT  -->
-                var userLocation=document.getElementById("userLocation");
-                var converter=document.getElementById("converter");
-                var weatherIcon=document.querySelector(".weather-icon");
-                var temperature=document.querySelector(".temperature");
-                var feelsLike=document.querySelector(".feelsLike");
-                var description=document.querySelector(".description");
-                var date=document.querySelector(".date");
-                var city=document.querySelector(".city");
-                
-                
-                
-                
-                                // <!-- /* WEATHER OUTPUT GROUP  */ -->
-                
-                var HValue=document.getElementById("HValue");
-                var WValue=document.getElementById("WValue");
-                var SRValue=document.getElementById("SRValue");
-                var SSValue=document.getElementById("SSValue");
-                var CValue=document.getElementById("CValue");
-                var UVValue=document.getElementById("UVValue");
-                var PValue=document.getElementById("PValue");
-                
-                
-                                // <!-- WEEKLY details  -->
-                
-                var forecast=document.querySelector(".forecast")
-                
-                                // google-->openweather Api -->hamberger(API)-->API doc-->
-                                // Current weather data-->API call-->Copy link and remove lat,lon and 
-                                // add appid(privatekey)-->after private key add(&q=)
-                
-                                // my key: dab389c15d15e8ccac171a870ad544d3
-                WEATHER_API_ENDPOINT=`https://api.openweathermap.org/data/2.5/weather?appid=a5bb4718b30b6f58f58697997567fffa&q=`;
-                
-                                // SAME url copy upto ==https://api.openweathermap.org/data/2.5/ and add onecall
-                
-                
-                WEATHER_DATA_ENDPOINT=`https://api.openweathermap.org/data/2.5/onecall?appid=a5bb4718b30b6f58f58697997567fffa&exclude=minutely&units=metric&`;
-                                // function to find the location 
-                
-                function findUserLocation(){
-                                forecast.innerHTML="";
-                
-                
-                                // alert("finding location")
-                
-                                //gives the defaulted place as london 
-                                //but we need to give it by specific in search so removed london in 47th line
-                                // fetch(WEATHER_API_ENDPOINT+"london")
-                
-                    fetch(WEATHER_API_ENDPOINT+userLocation.value)
-                    .then((response)=>response.json())
-                    .then((data)=>{
-                                 //console.log(data);//to all the data
-                
-                        if(data.cod!=""&& data.cod!=200){
-                                //1.if we not gave any city
-                                //2.not found city
-                            alert(data.message);
-                            return;
-                        }
-                        
-                                // console.log(data.coord.lon,data.coord.lat);//after adding line no 59 cmt me
-                        console.log(data);
-                                //city.innerHTML=data.name+"to show the country name in output
-                                //","+speechSynthesis.country; to add country
-                        city.innerHTML=data.name+","+data.sys.country;
-                
-                        //TO SHOW THE ICON OF THE WEATHER
-                
-                                //openweatherimages-->scroll down-->How to get icon URL--copy url   
-                                // direct link= https://openweathermap.org/img/wn/10d@2x.png
-                                // ${data.weather[0].icon}==>>to show the dynamic as per the time
-                        weatherIcon.style.background=`url( https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png)`
-                
-                                // passing coordinates to 2nd api 
-                        fetch(WEATHER_DATA_ENDPOINT+`lon=${data.coord.lon}&lat=${data.coord.lat}`)
-                        .then((response)=>response.json())
-                        .then((data)=>{
-                            console.log(data);
-                
-                        //TO ADD THE TEMPERATURE
-                        temperature.innerHTML=tempConverter(data.current.temp);
-                
-                                feelsLike.innerHTML="feelsLike "+data.current.feels_like;
-                
-                                description.innerHTML=
-                                        `<i class=fa-brands fa-cloudversify"></i> &nbsp;`+
-                                         data.current.weather[0].description;
-                                
-                                HValue.innerHTML=Math.round(data.current.humidity)+"<span>%</span>"
-                                WValue.innerHTML=Math.round(data.current.wind_speed)+"<span>m/s</span>"
-                
-                                const options={
-                                        weekday:"long",
-                                        month:"long",
-                                        day:"numeric",
-                                        hour:"numeric",
-                                        minute:"numeric",
-                                        hour12:true,
-                                };
-                                date.innerHTML= getLongFormateDateTime(data.current.dt,data.timezone_offset,options);
-                
-                                const options1={
-                                        hour:"numeric",
-                                        minutes:"numeric",
-                                        hour12:true,
-                                };
-                
-                                SRValue.innerHTML="sunrise"+" "+getLongFormateDateTime(data.current.sunrise,data.timezone_offset,options1);
-                                SSValue.innerHTML="sunset"+" "+getLongFormateDateTime(data.current.sunset,data.timezone_offset,options1);
-                
-                                CValue.innerHTML=data.current.clouds+"<span>%</span>";
-                                UVValue.innerHTML=data.current.uvi;
-                                PValue.innerHTML=data.current.pressure+"<span>hpa</span>"
-                
-                                data.daily.forEach((weather) => {
-                                        let div=document.createElement("div");
-                
-                                        //to append imgs in THIS WEEK
-                                const options={
-                                        weekday:"long",
-                                        month:"long",
-                                        day:"numeric"
-                                                
-                                }
-                                //to remove time as am-pm
-                                let daily=getLongFormateDateTime(weather.dt,0,options).split("at")
-                                        div.innerHTML=daily[0]
-                                        div.innerHTML+=`<img src="https://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png"/>`
-                                        // for every new time we need to clear imgs so set null at user fun 
-                                        
-                                        div.innerHTML+=`<p class="forecast-description">${weather.weather[0].description}</p>`
-                                        forecast.append(div)
-                                        
-                                });
-                
-                                
-                                
-                
-                                
-                        });
-                    });
-                    
-                
-                }
-                
-                //time format for SSVALUE and SRVALUE
-                function formatUnixTime(dtValue,offSet,options={}){
-                        const date=new Date((dtValue+offSet)*1000);
-                        return date.toLocaleTimeString([],{timeZone:"UTC",...options});
-                }
-                
-                function getLongFormateDateTime(dtValue,offSet,options){
-                        return formatUnixTime(dtValue,offSet,options)
-                }
-                function tempConverter(temp){
-                        let tempValue = Math.round(temp);
-                        console.log(tempValue);
-                        
-                        let message = "";
-                        if(converter.Value == "°C"){
-                          
-                          message = "<span>" + "\xB0C</span>";
-                        } else {
-                                let ctoF = (tempValue * 9/5) + 32;
-                          message = ctoF + "<span>" + "\xB0F</span>";
-                        }
-                        return message;
-                      }
+const API_KEY = "3540ed5323b3e51df96ad6cf38f42cba";
+const DAY_OF_THE_WEEK = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+const getDAY = (datevalue) => DAY_OF_THE_WEEK[new Date(datevalue).getDay()];
+const ENDPOINTS = {
+	CURRENT_FORECAST_COOORDS: "https://api.openweathermap.org/data/2.5/weather",
+	CURRENT_FORECAST: "https://api.openweathermap.org/data/2.5/weather",
+	FIVE_DAY_FORECAST: "https://api.openweathermap.org/data/2.5/forecast",
+	GEOLOCATION: "http://api.openweathermap.org/geo/1.0/direct",
+};
+
+const formatTemp = (value) => `${value.toFixed(1)}℃`;
+const formatTime = (time) => {
+	let [hours, minutes] = time.split(":");
+	return `${hours}:${minutes}`;
+};
+const getIcon = (iconcode) =>
+	`https://openweathermap.org/img/wn/${iconcode}@2x.png`;
+
+document.addEventListener("DOMContentLoaded", () => {
+	const loadCurrentForecast = async ({ lat, lon }) => {
+		const cityName = "pune";
+		const response =
+			lat && lon
+				? await fetch(
+						`${ENDPOINTS.CURRENT_FORECAST_COOORDS}?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`
+				  )
+				: await fetch(
+						`${ENDPOINTS.CURRENT_FORECAST}?q=${cityName}&appid=${API_KEY}&units=metric`
+				  );
+		// console.log(await response.json());
+		return response.json();
+	};
+
+	const loadHourlyForecast = async (city) => {
+		const response = await fetch(
+			`${ENDPOINTS.FIVE_DAY_FORECAST}?q=${city}&appid=${API_KEY}&units=metric`
+		);
+		const data = await response.json();
+		// console.log(data);
+		return data.list.map((forecast) => {
+			let {
+				dt,
+				dt_txt,
+				main: { temp, temp_max, temp_min },
+				weather: [{ description, icon }],
+			} = forecast;
+			return {
+				dt,
+				dt_txt,
+				temp,
+				temp_max,
+				temp_min,
+				description,
+				icon,
+			};
+		});
+	};
+
+	const loadData = async (data) => {
+		const currentforecast = await loadCurrentForecast(data);
+		// console.log(currentforecast);
+		createCurrentForecast(currentforecast);
+		const hourlyForecast = await loadHourlyForecast(currentforecast.name);
+		// console.log(hourlyForecast);
+		CreateFeelsLike(currentforecast);
+		createHumidity(currentforecast);
+
+		createHourlyForecast(hourlyForecast);
+		createFiveDayForecast(hourlyForecast);
+	};
+
+	const createFiveDayForecast = (hourlyForecast) => {
+		const result = Object.groupBy(hourlyForecast, (forecast) =>
+			getDAY(forecast.dt_txt.split(" ")[0])
+		);
+		// console.log(result);
+
+		for (let day in result) {
+			let temp_min = Math.min(
+				...Array.from(result[day], ({ temp_min }) => temp_min)
+			);
+			let temp_max = Math.max(
+				...Array.from(result[day], ({ temp_max }) => temp_max)
+			);
+			result[day] = {
+				temp_max,
+				temp_min,
+				icon: getIcon(result[day][0].icon),
+			};
+
+			// console.log(result[day].icon);
+		}
+		const Five_day_Container = document.querySelector(".fiveday-section");
+		Five_day_Container.innerHTML = "";
+		for (let day in result) {
+			// console.log(result[day]);
+
+			const Fiveday_Article = document.createElement("article");
+			Fiveday_Article.classList.add("day-wise");
+
+			const dayoftheWeek = document.createElement("h3");
+			dayoftheWeek.classList.add("day-week");
+			dayoftheWeek.textContent =
+				day === DAY_OF_THE_WEEK[new Date().getDay()] ? "Today" : day;
+
+			const Icon = document.createElement("img");
+			Icon.classList.add("icon");
+			Icon.src = result[day].icon;
+
+			const Max_temp = document.createElement("p");
+			Max_temp.classList.add("temp-max");
+			Max_temp.textContent = formatTemp(result[day].temp_max);
+
+			const Min_temp = document.createElement("p");
+			Min_temp.classList.add("temp-min");
+			Min_temp.textContent = formatTemp(result[day].temp_min);
+			Fiveday_Article.append(dayoftheWeek, Icon, Max_temp, Min_temp);
+			Five_day_Container.appendChild(Fiveday_Article);
+		}
+	};
+
+	const CreateFeelsLike = ({ main: { feels_like } }) => {
+		const element = document.querySelector(".container #feels-like .temp");
+		element.textContent = formatTemp(feels_like);
+	};
+
+	const createHumidity = ({ main: { humidity } }) => {
+		const element = document.querySelector(".container #humidity .hum-temp");
+		element.textContent = formatTemp(humidity);
+	};
+	const createHourlyForecast = (hourlyForecast) => {
+		let Data12Entries = hourlyForecast.slice(1, 13);
+		const hourlyContainer = document.querySelector(".hourly-section");
+		hourlyContainer.innerHTML = "";
+		for (const { temp, icon, dt_txt } of Data12Entries) {
+			const container = document.createElement("article");
+			container.classList.add("hour-info");
+
+			const time = document.createElement("h3");
+			time.classList.add("time");
+			time.textContent = formatTime(dt_txt.split(" ")[1]);
+
+			const IconImg = document.createElement("img");
+			IconImg.classList.add("icon");
+			IconImg.src = getIcon(icon);
+
+			const temperature = document.createElement("p");
+			temperature.classList.add("hourly-temp");
+			temperature.textContent = formatTemp(temp);
+
+			container.append(time, IconImg, temperature);
+			hourlyContainer.appendChild(container);
+		}
+	};
+
+	const createCurrentForecast = async ({
+		name,
+		main: { temp, temp_max, temp_min },
+		weather: [{ description, icon }],
+	}) => {
+		const Container = document.getElementById("current-forecast");
+		Container.innerHTML = "";
+
+		const heading = document.createElement("h1");
+		heading.classList.add("heading");
+		heading.textContent = `${name}`;
+
+		const temperature = document.createElement("p");
+		temperature.classList.add("temp");
+		temperature.textContent = `${formatTemp(temp)}`;
+
+		const DesCont = document.createElement("article");
+		DesCont.classList.add("img-des");
+		const IconImg = document.createElement("img");
+		IconImg.classList.add("icon");
+		IconImg.src = getIcon(icon);
+
+		const descriptionElement = document.createElement("p");
+		descriptionElement.classList.add("description");
+		descriptionElement.textContent = `${description}`;
+
+		const MinMaxTemp = document.createElement("p");
+		MinMaxTemp.classList.add("min-max-temp");
+		MinMaxTemp.textContent = `High:${formatTemp(
+			temp_max
+		)} ${"--"} Low:${formatTemp(temp_min)}`;
+		DesCont.append(IconImg, descriptionElement);
+		Container.appendChild(heading);
+		Container.appendChild(temperature);
+		Container.appendChild(DesCont);
+		Container.appendChild(MinMaxTemp);
+	};
+	// loadData();
+	const onInput = async (event) => {
+		let cityName = event.target.value.split(",");
+		console.log(cityName);
+
+		const cities = await GeolocationInfo(cityName);
+		// console.log(cities);
+		if (cityName) {
+			const datalist = document.getElementById("cities");
+			let options = "";
+			for (let { lat, lon, name, state, country } of cities) {
+				options += `<option data-coords=${JSON.stringify({
+					lat,
+					lon,
+				})} value="${name},${state},${country}"></option>`;
+			}
+			datalist.innerHTML = options;
+			// console.log(datalist);
+		}
+	};
+
+	// function debounce(func, timeout = 100) {
+	// 	let timer;
+	// 	return (...args) => {
+	// 		clearTimeout(timer);
+	// 		timer = setTimeout(() => {
+	// 			func.apply(this, args);
+	// 		}, timeout);
+	// 	};
+	// }
+
+	const onSelect = (event) => {
+		// let cityName = event.target.value;
+		// console.log(cityName);
+
+		let selectedCity = document.querySelector("datalist > option");
+		if (selectedCity) {
+			// console.log(selectedCity);
+			let result = JSON.parse(selectedCity.getAttribute("data-coords"));
+			if (result) {
+				loadData(result);
+			}
+		}
+	};
+
+	const searchElement = document.getElementById("searchbox");
+	// const debounceElement = debounce((event) => onInput(event));
+	searchElement.addEventListener("input", onInput);
+	searchElement.addEventListener("change", onSelect);
+	searchElement.addEventListener("onselect", onSelect);
+
+	const GeolocationInfo = async (cityName) => {
+		console.log("geo func called");
+
+		const response = await fetch(
+			`${ENDPOINTS.GEOLOCATION}?q=${cityName},&limit=5&appid=${API_KEY}`
+		);
+		return response.json();
+	};
+
+	const loadDataUSingGeoLocation = () => {
+		navigator.geolocation.getCurrentPosition(
+			({ coords: { latitude: lat, longitude: lon } }) => {
+				console.log(lat, lon);
+
+				loadData({ lat, lon });
+			},
+			() => {
+				alert("unable to fetch location");
+				loadData();
+			}
+		);
+	};
+	loadDataUSingGeoLocation();
+	// GeolocationInfo("pune");
+});
